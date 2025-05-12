@@ -24,7 +24,7 @@ function addLayers(map, isBefore) {
         tiles: [
             isBefore
                 ? 'https://api.mapbox.com/v4/kimpyk365.alzitnva/{z}/{x}/{y}.png?access_token=' + mapboxgl.accessToken
-                : 'https://api.mapbox.com/v4/kimpyk365.5shmruxo/{z}/{x}/{y}.png?access_token=' + mapboxgl.accessToken
+                : 'https://api.mapbox.com/v4/kimpyk365.32zovz2g/{z}/{x}/{y}.png?access_token=' + mapboxgl.accessToken
         ],
         tileSize: 256
     });
