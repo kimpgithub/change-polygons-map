@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Polygons Map with Compare Slider</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="comparison-container">
+        <div id="before" class="map"></div>
+        <div id="after" class="map"></div>
+    </div>
+    <div id="controls">
+        <label><input type="checkbox" id="increase" checked> Increase Polygons</label>
+        <label><input type="checkbox" id="decrease" checked> Decrease Polygons</label>
+    </div>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
