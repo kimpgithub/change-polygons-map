@@ -2,25 +2,23 @@ mapboxgl.accessToken = 'pk.eyJ1Ijoia2ltcHlrMzY1IiwiYSI6ImNtMHZ0YjJreTFqMWkyanBsd
 
 const beforeMap = new mapboxgl.Map({
     container: 'before',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [127.4, 37.6], // GeoJSON 좌표에 맞게 설정
+    style: 'mapbox://styles/mapbox/empty-v8',
+    center: [127.1, 37.4],
     zoom: 12
 });
 
 const afterMap = new mapboxgl.Map({
     container: 'after',
-    style: 'mapbox://styles/mapbox/streets-v11',
-    center: [127.4, 37.6],
+    style: 'mapbox://styles/mapbox/empty-v8',
+    center: [127.1, 37.4],
     zoom: 12
 });
 
 const compare = new mapboxgl.Compare(beforeMap, afterMap, '#comparison-container', {
-    mousemove: true // 마우스 이동으로 슬라이더 조정
+    mousemove: true
 });
 
-// 공통 레이어 추가 함수
 function addLayers(map, isBefore) {
-    // 인공위성 타일셋 추가
     map.addSource('satellite', {
         type: 'raster',
         tiles: [
@@ -37,10 +35,9 @@ function addLayers(map, isBefore) {
         paint: { 'raster-opacity': 1 }
     });
 
-    // GeoJSON 데이터 추가
     map.addSource('change-polygons', {
         type: 'geojson',
-        data: 'data/change_polygons.geojson'
+        data: 'data/change_polygons_wgs84.geojson'
     });
 
     map.addLayer({
@@ -65,8 +62,20 @@ function addLayers(map, isBefore) {
         }
     });
 
-    // 폴리곤 클릭 시 팝업
-    map.on('click', ['increase-polygons', 'decrease-polygons'], (e) => {
+    map.addLayer({
+        id: 'all-polygons',
+        type: 'fill',
+        source: 'change-polygons',
+        paint: {
+            'fill-color': '#0000ff',
+            'fill-opacity': 0.5
+        },
+        layout: {
+            'visibility': 'none' // 기본적으로 숨김
+        }
+    });
+
+    map.on('click', ['increase-polygons', 'decrease-polygons', 'all-polygons'], (e) => {
         const props = e.features[0].properties;
         new mapboxgl.Popup()
             .setLngLat(e.lngLat)
@@ -74,33 +83,61 @@ function addLayers(map, isBefore) {
             .addTo(map);
     });
 
-    // 마우스 오버 시 커서 변경
-    map.on('mouseenter', ['increase-polygons', 'decrease-polygons'], () => {
+    map.on('mouseenter', ['increase-polygons', 'decrease-polygons', 'all-polygons'], () => {
         map.getCanvas().style.cursor = 'pointer';
     });
-    map.on('mouseleave', ['increase-polygons', 'decrease-polygons'], () => {
+    map.on('mouseleave', ['increase-polygons', 'decrease-polygons', 'all-polygons'], () => {
         map.getCanvas().style.cursor = '';
     });
 
-    // 타일 로드 오류 디버깅
+    map.on('sourcedata', (e) => {
+        if (e.sourceId === 'change-polygons' && e.isSourceLoaded) {
+            console.log('GeoJSON source loaded:', map.getSource('change-polygons'));
+        }
+    });
+
     map.on('error', (e) => {
-        if (e.error.message.includes('Not Found')) return; // 404 오류 무시
+        if (e.error.message.includes('Not Found')) {
+            console.error('GeoJSON load error:', e);
+            return;
+        }
         console.error('Map error:', e);
     });
 }
 
-// 맵 로드 후 레이어 추가
-beforeMap.on('load', () => addLayers(beforeMap, true));
-afterMap.on('load', () => addLayers(afterMap, false));
+beforeMap.on('load', () => {
+    addLayers(beforeMap, true);
+    console.log('beforeMap layers:', beforeMap.getLayer('increase-polygons'), beforeMap.getLayer('decrease-polygons'));
+});
+afterMap.on('load', () => {
+    addLayers(afterMap, false);
+    console.log('afterMap layers:', afterMap.getLayer('increase-polygons'), afterMap.getLayer('decrease-polygons'));
+});
 
 // 체크박스 이벤트 핸들러
-document.getElementById('increase').addEventListener('change', (e) => {
-    const visibility = e.target.checked ? 'visible' : 'none';
-    beforeMap.setLayoutProperty('increase-polygons', 'visibility', visibility);
-    afterMap.setLayoutProperty('increase-polygons', 'visibility', visibility);
-});
-document.getElementById('decrease').addEventListener('change', (e) => {
-    const visibility = e.target.checked ? 'visible' : 'none';
-    beforeMap.setLayoutProperty('decrease-polygons', 'visibility', visibility);
-    afterMap.setLayoutProperty('decrease-polygons', 'visibility', visibility);
-});
+const increaseCheckbox = document.getElementById('increase');
+const decreaseCheckbox = document.getElementById('decrease');
+
+if (increaseCheckbox) {
+    console.log('Increase checkbox found');
+    increaseCheckbox.addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        beforeMap.setLayoutProperty('increase-polygons', 'visibility', visibility);
+        afterMap.setLayoutProperty('increase-polygons', 'visibility', visibility);
+        console.log('Increase visibility set to:', visibility);
+    });
+} else {
+    console.error('Increase checkbox not found');
+}
+
+if (decreaseCheckbox) {
+    console.log('Decrease checkbox found');
+    decreaseCheckbox.addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        beforeMap.setLayoutProperty('decrease-polygons', 'visibility', visibility);
+        afterMap.setLayoutProperty('decrease-polygons', 'visibility', visibility);
+        console.log('Decrease visibility set to:', visibility);
+    });
+} else {
+    console.error('Decrease checkbox not found');
+}
